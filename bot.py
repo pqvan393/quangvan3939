@@ -1,14 +1,19 @@
 from google import genai
 import os
 
-# Kết nối API
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+# Kiểm tra xem Key có tồn tại không
+api_key = os.environ.get("GEMINI_API_KEY")
 
-# Gửi câu hỏi cho Gemini 1.5 Flash
-response = client.models.generate_content(
-    model="gemini-1.5-flash",
-    contents="Chào bạn, mình là Bot vừa được nâng cấp. Hãy gửi một lời chúc mừng mình nhé!"
-)
-
-print("--- Kết quả từ Gemini ---")
-print(response.text)
+if not api_key:
+    print("LỖI: Bạn chưa cài đặt GEMINI_API_KEY trong mục Secrets của GitHub!")
+else:
+    try:
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents="Hãy nói 'Kết nối thành công!' bằng tiếng Việt."
+        )
+        print("--- KẾT QUẢ ---")
+        print(response.text)
+    except Exception as e:
+        print(f"Lỗi khi kết nối với Gemini: {e}")
