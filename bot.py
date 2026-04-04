@@ -1,26 +1,85 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
+import asyncio
+from typing import Optional
 
-api_key = os.environ.get("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+class GeminiBot:
+    def __init__(self, api_key: Optional[str] = None):
+        # Ưu tiên lấy API key từ biến môi trường
+        self.api_key = api_key or os.getenv("GOOGLE_GENAI_API_KEY")
+        if not self.api_key:
+            raise ValueError("Vui lòng cung cấp GOOGLE_GENAI_API_KEY hoặc truyền api_key vào constructor")
 
-print("--- ĐANG KIỂM TRA CÁC MÔ HÌNH KHẢ DỤNG ---")
-available_models = []
-try:
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            available_models.append(m.name)
-            print(f"Tìm thấy: {m.name}")
-    
-    # Chọn mô hình đầu tiên tìm thấy để chạy thử
-    if not available_models:
-        print("LỖI: Không tìm thấy mô hình nào hỗ trợ tạo nội dung trong tài khoản này!")
-    else:
-        target_model = available_models[0]
-        print(f"\n--- ĐANG CHẠY THỬ VỚI: {target_model} ---")
-        model = genai.GenerativeModel(target_model)
-        response = model.generate_content("Chào bạn, hãy xác nhận bạn đang hoạt động.")
-        print("KẾT QUẢ:", response.text)
+        self.client = genai.Client(api_key=self.api_key)
 
-except Exception as e:
-    print(f"LỖI HỆ THỐNG: {e}")
+        # Model khuyến nghị hiện tại (tháng 4/2026)
+        self.model_name = "gemini-2.5-flash"      # Nhanh, thông minh, chi phí tốt
+        # Các lựa chọn khác:
+        # "gemini-2.5-pro"     # Mạnh hơn, phù hợp task phức tạp
+        # "gemini-3-flash-preview"  # Nếu muốn thử phiên bản mới nhất (preview)
+
+    def generate_response(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        """Gọi Gemini đồng bộ (sync)"""
+        try:
+            config = types.GenerateContentConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+                # Bạn có thể thêm safety_settings nếu cần
+            )
+
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=config
+            )
+
+            return response.text.strip() if response.text else "Xin lỗi, tôi không nhận được phản hồi từ mô hình."
+
+        except Exception as e:
+            return f"Lỗi khi gọi Gemini: {str(e)}"
+
+    async def generate_response_async(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> str:
+        """Gọi Gemini bất đồng bộ (async) - khuyến nghị dùng nếu bot của bạn chạy async"""
+        try:
+            config = types.GenerateContentConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            )
+
+            response = await self.client.models.generate_content_async(
+                model=self.model_name,
+                contents=prompt,
+                config=config
+            )
+
+            return response.text.strip() if response.text else "Xin lỗi, tôi không nhận được phản hồi từ mô hình."
+
+        except Exception as e:
+            return f"Lỗi khi gọi Gemini: {str(e)}"
+
+
+# Nếu bạn muốn hỗ trợ chat có lịch sử (conversation)
+class GeminiChatBot(GeminiBot):
+    def __init__(self, api_key: Optional[str] = None):
+        super().__init__(api_key)
+        self.history = []   # Lưu lịch sử hội thoại
+
+    def chat(self, user_message: str) -> str:
+        self.history.append({"role": "user", "parts": [user_message]})
+
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=self.history
+            )
+
+            bot_reply = response.text.strip()
+            self.history.append({"role": "model", "parts": [bot_reply]})
+            return bot_reply
+
+        except Exception as e:
+            return f"Lỗi: {str(e)}"
+
+    def clear_history(self):
+        self.history.clear()
