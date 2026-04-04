@@ -1,23 +1,19 @@
-from google import genai
+import google.generativeai as genai
 import os
 
+# Cấu hình API
 api_key = os.environ.get("GEMINI_API_KEY")
+genai.configure(api_key=api_key)
 
-if not api_key:
-    print("LỖI: Không tìm thấy API Key!")
-else:
-    try:
-        client = genai.Client(api_key=api_key)
-        
-        # Thử sử dụng tên mô hình đầy đủ hơn
-        response = client.models.generate_content(
-            model="gemini-1.5-flash", 
-            contents="Chào bạn, hãy xác nhận bạn đã hoạt động bằng cách nói: 'Tôi đã sẵn sàng!'"
-        )
-        
-        print("--- KẾT QUẢ ---")
-        print(response.text)
-    except Exception as e:
-        # Nếu vẫn lỗi 404, đoạn này sẽ giúp bạn biết bạn có những mô hình nào
-        print(f"Lỗi: {e}")
-        print("\nMẹo: Hãy kiểm tra xem API Key của bạn đã được kích hoạt trong Google AI Studio chưa nhé.")
+try:
+    # Sử dụng cách gọi truyền thống nhưng ổn định nhất
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    response = model.generate_content("Trả lời ngắn gọn: Bạn đã sẵn sàng chưa?")
+    
+    print("--- KẾT QUẢ TỪ GEMINI ---")
+    print(response.text)
+    print("-------------------------")
+except Exception as e:
+    print(f"Lỗi rồi: {e}")
+    print("Mẹo: Kiểm tra lại API Key trong phần Secrets xem có bị thừa dấu cách không bạn nhé!")
