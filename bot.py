@@ -1,24 +1,16 @@
-name: Run Gemini Bot
+import google.generativeai as genai
+import os
 
-on:
-  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công để kiểm tra
+# Kết nối với chìa khóa bạn đã lưu trong Secrets
+api_key = os.environ.get("GEMINI_API_KEY")
+genai.configure(api_key=api_key)
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# Chọn mô hình Gemini
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+# Thử nghiệm gửi một câu hỏi
+prompt = "Chào bạn, mình là Bot mới tạo. Hãy gửi một lời chào mừng mình đến với thế giới nhé!"
+response = model.generate_content(prompt)
 
-      - name: Install dependencies
-        run: pip install google-generativeai
-
-      - name: Run bot
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Lấy key từ Secrets ra
-        run: python bot.py
+print("--- Kết quả từ Gemini ---")
+print(response.text)
