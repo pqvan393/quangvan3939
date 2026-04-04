@@ -1,36 +1,24 @@
-import asyncio
-from bot import GeminiBot, GeminiChatBot   # Import từ bot.py
+name: Run Gemini Bot
 
-async def main():
-    # Khởi tạo bot
-    bot = GeminiBot()                    # Hoặc GeminiChatBot() nếu muốn có lịch sử
-    # bot = GeminiChatBot()
+on:
+  workflow_dispatch: 
 
-    print("🤖 Gemini Bot đã sẵn sàng! (Nhập 'exit' hoặc 'quit' để thoát)\n")
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    while True:
-        user_input = input("Bạn: ").strip()
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Dùng bản 3.11 để ổn định nhất năm 2026
 
-        if user_input.lower() in ['exit', 'quit', 'thoát']:
-            print("👋 Tạm biệt!")
-            break
+      - name: Install dependencies
+        run: pip install google-generativeai
 
-        if not user_input:
-            continue
-
-        print("Đang suy nghĩ...", end="\r")
-
-        # Dùng async (khuyến nghị)
-        response = await bot.generate_response_async(user_input)
-
-        # Hoặc dùng sync:
-        # response = bot.generate_response(user_input)
-
-        print(f"Gemini: {response}\n")
-
-
-if __name__ == "__main__":
-    # Cách tốt nhất: đặt API key vào biến môi trường
-    # export GOOGLE_GENAI_API_KEY="your_api_key_here"
-
-    asyncio.run(main())
+      - name: Run bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python bot.py
