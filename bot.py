@@ -1,16 +1,14 @@
-import google.generativeai as genai
+from google import genai
 import os
 
-# Kết nối với chìa khóa bạn đã lưu trong Secrets
-api_key = os.environ.get("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
+# Kết nối API
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# Chọn mô hình Gemini
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-# Thử nghiệm gửi một câu hỏi
-prompt = "Chào bạn, mình là Bot mới tạo. Hãy gửi một lời chào mừng mình đến với thế giới nhé!"
-response = model.generate_content(prompt)
+# Gửi câu hỏi cho Gemini 1.5 Flash
+response = client.models.generate_content(
+    model="gemini-1.5-flash",
+    contents="Chào bạn, mình là Bot vừa được nâng cấp. Hãy gửi một lời chúc mừng mình nhé!"
+)
 
 print("--- Kết quả từ Gemini ---")
 print(response.text)
