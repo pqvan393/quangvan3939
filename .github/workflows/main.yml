@@ -1,23 +1,15 @@
 name: Run Gemini Bot
-
 on:
   workflow_dispatch: 
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Dùng bản 3.11 để ổn định nhất năm 2026
-
-      - name: Install dependencies
-        run: pip install google-generativeai
-
+          python-version: '3.11'
+      - run: pip install google-generativeai
       - name: Run bot
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
