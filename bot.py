@@ -1,37 +1,33 @@
 import google.generativeai as genai
-import os
+from google.generativeai.types import GenerationConfig
 
-# 1. Cấu hình API Key
-# Thay 'YOUR_API_KEY' bằng mã thực tế của bạn hoặc thiết lập biến môi trường
-API_KEY = "YOUR_API_KEY"
-genai.configure(api_key=API_KEY)
+class GeminiBot:
+    def __init__(self, api_key: str, model_name: str = 'gemini-1.5-flash'):
+        """Khởi tạo Bot với API Key và cấu hình model."""
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel(
+            model_name=model_name,
+            generation_config=self._get_config()
+        )
+        self.chat_session = self.model.start_chat(history=[])
 
-def generate_gemini_content():
-    try:
-        # 2. Sử dụng tên model chuẩn: 'gemini-1.5-flash' 
-        # (Bỏ đuôi '-latest' nếu gặp lỗi 404 vì alias này đôi khi không khớp với endpoint v1beta)
-        model_name = 'gemini-1.5-flash'
-        
-        # Khởi tạo model
-        model = genai.GenerativeModel(model_name)
-        
-        # 3. Gọi hàm generate_content
-        prompt = "Viết một lời chào ngắn gọn và hài hước bằng tiếng Việt."
-        
-        print(f"--- Đang gửi yêu cầu tới model: {model_name} ---")
-        response = model.generate_content(prompt)
-        
-        # 4. Xuất kết quả
-        print("Kết quả phản hồi:")
-        print(response.text)
+    def _get_config(self):
+        """Cấu hình tham số phản hồi (tùy chỉnh độ sáng tạo)."""
+        return GenerationConfig(
+            temperature=0.7,
+            top_p=0.95,
+            top_k=64,
+            max_output_tokens=2048,
+        )
 
-    except Exception as e:
-        # Bắt lỗi và hướng dẫn xử lý
-        print(f"Đã xảy ra lỗi: {e}")
-        print("\nGợi ý sửa lỗi:")
-        print("- Kiểm tra lại API Key xem đã chính xác chưa.")
-        print("- Chạy 'pip install -U google-generativeai' để cập nhật thư viện.")
-        print("- Sử dụng lệnh 'genai.list_models()' để xem danh sách model khả dụng.")
+    def ask(self, prompt: str) -> str:
+        """Gửi tin nhắn và nhận phản hồi từ Bot."""
+        try:
+            response = self.chat_session.send_message(prompt)
+            return response.text
+        except Exception as e:
+            return f"❌ Lỗi khi gọi Gemini: {str(e)}"
 
-if __name__ == "__main__":
-    generate_gemini_content()
+    def reset_chat(self):
+        """Xóa lịch sử trò chuyện."""
+        self.chat_session = self.model.start_chat(history=[])
