@@ -7,7 +7,7 @@ genai.configure(api_key=api_key)
 
 try:
     # Thử gọi model với tên chuẩn nhất
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
     
     response = model.generate_content("Trả lời ngắn gọn: Bạn đã sẵn sàng chưa?")
     
