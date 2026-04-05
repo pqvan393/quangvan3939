@@ -1,24 +1,40 @@
-name: Run Gemini Bot
+from bot import GeminiBot
+import sys
 
-on:
-  workflow_dispatch: 
+def main():
+    # Thay API Key của bạn vào đây
+    API_KEY = "YOUR_API_KEY_HERE"
+    
+    # Khởi tạo instance của Bot
+    # Sử dụng 'gemini-1.5-flash' để đảm bảo không bị lỗi 404
+    bot = GeminiBot(api_key=API_KEY)
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    print("=== CHÀO MỪNG BẠN ĐẾN VỚI GEMINI AI BOT ===")
+    print("(Gõ 'exit' hoặc 'quit' để thoát, 'reset' để xóa lịch sử)")
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11' # Dùng bản 3.11 để ổn định nhất năm 2026
+    while True:
+        user_input = input("\nBạn: ").strip()
 
-      - name: Install dependencies
-        run: pip install google-generativeai
+        if user_input.lower() in ['exit', 'quit']:
+            print("Tạm biệt!")
+            break
+        
+        if user_input.lower() == 'reset':
+            bot.reset_chat()
+            print("System: Lịch sử trò chuyện đã được làm mới.")
+            continue
 
-      - name: Run bot
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python bot.py
+        if not user_input:
+            continue
+
+        # Bot xử lý và trả lời
+        print("Bot đang suy nghĩ...", end="\r")
+        reply = bot.ask(user_input)
+        print(f"Bot: {reply}")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nĐã dừng chương trình.")
+        sys.exit(0)
